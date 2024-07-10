@@ -1,0 +1,53 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          hobot
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: load wifi driver
+### END INIT INFO
+
+do_load_wifi()
+{
+	som_name=$(cat /sys/class/socinfo/som_name)
+	if [ ${som_name} == '5' ];then
+		modprobe bcmdhd
+	elif [ ${som_name} == '6' ];then
+		modprobe 8723ds
+	elif [ ${som_name} == '8' ];then
+		modprobe 8821cs
+		config_file="/boot/config.txt"
+		antenna_option="wifi_antenna"
+
+		if [ -f "$config_file" ]; then
+			antenna_value=$(grep -E "^$antenna_option=" "$config_file" | cut -d= -f2)
+
+			if [ -n "$antenna_value" ]; then
+				if [ "$antenna_value" = "cable" ]; then
+					/bin/switch_antenna cable
+				elif [ "$antenna_value" = "trace" ]; then
+					/bin/switch_antenna trace
+				else
+					echo "Unrecognized value for $antenna_option: $antenna_value"
+				fi
+			else
+				/bin/switch_antenna trace
+			fi
+		else
+		/bin/switch_antenna trace
+		fi
+	fi
+}
+
+case "$1" in
+	start)
+		do_load_wifi
+		exit 0
+		;;
+	*)
+		echo "Usage: $0 start"
+		exit 0
+	;;
+esac

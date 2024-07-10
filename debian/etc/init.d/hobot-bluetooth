@@ -1,0 +1,33 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          hobot
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: init bluetooth
+### END INIT INFO
+
+do_init_bt()
+{
+	startbt6212_path="/usr/bin/startbt6212.sh"
+	startbt_path="/usr/bin/startbt.sh"
+
+	if [ -e "$startbt_path" ]; then
+		"$startbt_path"
+	elif [ -e "$startbt6212_path" ]; then
+		"$startbt6212_path"
+	fi
+}
+
+case "$1" in
+	start)
+		do_init_bt
+		exit 0
+		;;
+	*)
+		echo "Usage: $0 start"
+		exit 0
+		;;
+esac

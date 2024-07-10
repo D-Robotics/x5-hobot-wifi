@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# set -x
+
+main()
+{
+    if [ $# -ne 2 ]; then
+        echo "Usage: wifi_connect \"ssid\" \"password\""
+        exit 0
+    fi
+
+    SSID="$1"
+    PASSWD="$2"
+
+    nmcli device wifi connect "${SSID}" password "${PASSWD}"
+
+}
+
+args=("$@")
+main "${args[@]}"
+

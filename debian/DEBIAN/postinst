@@ -1,0 +1,6 @@
+#!/bin/bash
+
+systemctl enable hobot-wifi.service
+systemctl enable hobot-bluetooth.service
+
+exit 0
