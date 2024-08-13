@@ -4,13 +4,13 @@ usage(){
     echo "switch_antenna trace|cable"
 }
 
-if [ ! -d "/sys/class/gpio/gpio99/" ]; then
-    echo 99 > /sys/class/gpio/export
-    echo out > /sys/class/gpio/gpio99/direction
+if [ ! -d "/sys/class/gpio/gpio428/" ]; then
+    echo 428 > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio428/direction
 fi
-if [ ! -d "/sys/class/gpio/gpio100/" ]; then
-    echo 100 > /sys/class/gpio/export
-    echo out > /sys/class/gpio/gpio100/direction
+if [ ! -d "/sys/class/gpio/gpio429/" ]; then
+    echo 429 > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio429/direction
 fi
 if [ $# -ne 1  ];
 then
@@ -19,13 +19,13 @@ then
 fi
 if [ $1 = 'trace' ]
 then
-    echo 0 > /sys/class/gpio/gpio99/value
-    echo 1 > /sys/class/gpio/gpio100/value
+    echo 1 > /sys/class/gpio/gpio428/value
+    echo 0 > /sys/class/gpio/gpio429/value
     echo "Setting antenna to trace mode"
 elif [ $1 = 'cable' ]
 then
-    echo 1 > /sys/class/gpio/gpio99/value
-    echo 0 > /sys/class/gpio/gpio100/value
+    echo 0 > /sys/class/gpio/gpio428/value
+    echo 1 > /sys/class/gpio/gpio429/value
     echo "Setting antenna to cable mode"
 else 
     usage

@@ -1,33 +1,23 @@
 #!/bin/bash
 
-som_name=$(cat /sys/class/socinfo/som_name)
+get_rdk_type_string() {
+  board_id=$(cat /sys/class/socinfo/board_id)
+  board_type=$((0x$board_id & 0xfff))
+  hex_btype=$(printf "0x%x" $board_type)
 
-# reset bt
-if [ ${som_name} == '5' ] || [ ${som_name} == '6' ] || [ ${som_name} == '8' ];then
-	# X3 PI
-	echo 57 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio57/direction
-	echo 0 > /sys/class/gpio/gpio57/value
-	sleep 0.5
-	echo 1 > /sys/class/gpio/gpio57/value
-	echo 57 > /sys/class/gpio/unexport
-elif [ ${som_name} == 'b' ]; then
-	# X3 CM
-	echo 2 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio2/direction
-	echo 0 > /sys/class/gpio/gpio2/value
-	sleep 0.5
-	echo 1 > /sys/class/gpio/gpio2/value
-	echo 2 > /sys/class/gpio/unexport
-elif [ ${som_name} == '3' ]  || [ ${som_name} == '4' ]; then
-	# X3 SDB
-	echo 23 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio23/direction
-	echo 0 > /sys/class/gpio/gpio23/value
-	sleep 0.5
-	echo 1 > /sys/class/gpio/gpio23/value
-	echo 23 > /sys/class/gpio/unexport
-fi
+  case $hex_btype in
+  "0x301")
+    echo "x5_rdk"
+    ;; 
+  *)
+    echo "null"
+    exit -1
+  ;;
+  esac
+
+}
+
+board_type_string=$(get_rdk_type_string)
 
 id messagebus >& /dev/null
 if [ $? -ne 0 ]; then
@@ -35,12 +25,8 @@ if [ $? -ne 0 ]; then
 	useradd -g messagebus messagebus
 fi
 
-if [ ${som_name} == '5' ];then
-	brcm_patchram_plus --enable_hci --no2bytes --tosleep 200000 --baudrate 460800 --patchram /lib/firmware/brcm/BCM4343A1.hcd /dev/ttyS1 &
-elif [ ${som_name} == '6' ];then
-	rtk_hciattach -n -s 115200 ttyS1 rtk_h5 &
-elif [ ${som_name} == 'b' ] || [ ${som_name} == '8' ];then
-	rtk_hciattach -n -s 115200 ttyS1 rtk_h5 noflow &
+if [ $board_type_string == "x5_rdk" ]; then
+	hciattach -s 1500000 /dev/ttyS5 any 1500000 noflow &
 fi
 
 echo -n "Waiting for bluetooth initialize..."
