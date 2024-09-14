@@ -9,6 +9,9 @@ get_rdk_type_string() {
   "0x301")
     echo "x5_rdk"
     ;; 
+  "0x302")
+    echo "x5_rdk"
+    ;;
   *)
     echo "null"
     exit -1
