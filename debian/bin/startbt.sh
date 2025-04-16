@@ -1,29 +1,5 @@
 #!/bin/bash
 
-get_rdk_type_string() {
-  board_id=$(cat /sys/class/socinfo/board_id)
-  board_type=$((0x$board_id & 0xfff))
-  hex_btype=$(printf "0x%x" $board_type)
-
-  case $hex_btype in
-  "0x301")
-    echo "x5_rdk"
-    ;; 
-  "0x302")
-    echo "x5_rdk"
-    ;;
-  "0x501")
-    echo "x5_rdk"
-    ;;
-  *)
-    echo "null"
-    exit -1
-  ;;
-  esac
-
-}
-
-board_type_string=$(get_rdk_type_string)
 
 id messagebus >& /dev/null
 if [ $? -ne 0 ]; then
@@ -31,9 +7,7 @@ if [ $? -ne 0 ]; then
 	useradd -g messagebus messagebus
 fi
 
-if [ $board_type_string == "x5_rdk" ]; then
-	hciattach -s 1500000 /dev/ttyS5 any 1500000 noflow &
-fi
+hciattach -s 1500000 /dev/ttyS5 any 1500000 noflow &
 
 echo -n "Waiting for bluetooth initialize..."
 wait_hci0=0
