@@ -33,7 +33,22 @@ if [ x${block_state} == x"blocked" ]; then
 	rfkill unblock bluetooth
 fi
 
-sleep 0.3
+# bluetoothd
+echo "restart bluetooth..."
+systemctl restart bluetooth
+
+# wait bluetoothd
+echo -n "Waiting for bluetoothd..."
+count=0
+while true; do
+    hciconfig hci0 >/dev/null 2>&1 && break
+    sleep 1
+    count=$((count+1))
+    [ $count -gt 10 ] && { echo " bluetoothd init timeout!"; exit 1; }
+    echo -n "."
+done
+echo " OK"
+
 echo "Set Bluetooth Up..."
 hciconfig hci0 up
 
