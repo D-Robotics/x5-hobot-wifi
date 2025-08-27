@@ -84,7 +84,7 @@ loss_enable=0
 loss_value=2
 
 # txpwr_ofst
-ofst_enable=1
+ofst_enable=0
 ofst_2g4_11b_chan_1_4=3
 ofst_2g4_11b_chan_5_9=3
 ofst_2g4_11b_chan_10_13=3
