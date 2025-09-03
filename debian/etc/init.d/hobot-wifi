@@ -9,17 +9,50 @@
 # Short-Description: load wifi driver
 ### END INIT INFO
 
+get_antenna_type_string() {
+  board_id=$(cat /sys/class/socinfo/board_id)
+  board_type=$((0x$board_id & 0xfff))
+  hex_btype=$(printf "0x%x" $board_type)
+
+  case $hex_btype in
+  "0x301")
+    echo "switch"
+    ;; 
+  "0x302")
+    echo "switch"
+    ;; 
+  "0x501")
+    echo "switch"
+    ;;
+  "0x502")
+    echo "switch"
+    ;; 
+  "0x503")
+    echo "switch"
+    ;;
+  "0x504")
+    echo "switch"
+    ;;
+  "0x505")
+    echo "switch"
+    ;;
+  "0x506")
+    echo "fixed"
+    ;;
+  *)
+    echo "null"
+    exit -1
+  ;;
+  esac
+}
+
 do_load_wifi()
 {
-	som_name=$(cat /sys/class/socinfo/som_name)
-	if [ ${som_name} == '5' ];then
-		modprobe bcmdhd
-	elif [ ${som_name} == '6' ];then
-		modprobe 8723ds
-	elif [ ${som_name} == '8' ];then
-		modprobe 8821cs
+	  antenna_type=$(get_antenna_type_string)
+
+    if [ $antenna_type == "switch" ]; then
 		config_file="/boot/config.txt"
-		antenna_option="wifi_antenna"
+		antenna_option="antenna_option"
 
 		if [ -f "$config_file" ]; then
 			antenna_value=$(grep -E "^$antenna_option=" "$config_file" | cut -d= -f2)
