@@ -4,13 +4,76 @@ usage(){
     echo "switch_antenna trace|cable"
 }
 
-if [ ! -d "/sys/class/gpio/gpio428/" ]; then
-    echo 428 > /sys/class/gpio/export
-    echo out > /sys/class/gpio/gpio428/direction
+SYSFS_BOARDID_PATH="/sys/class/socinfo/board_id"
+SYSFS_SOCNAME_PATH="/sys/class/socinfo/soc_name"
+SYSFS_SOMNAME_PATH="/sys/class/socinfo/som_name"
+
+get_rdk_type_string() {
+  local soc_name=""
+  local board_id=""
+  local rdk_type="unknown"
+
+  if [ -f "${SYSFS_SOCNAME_PATH}" ]; then
+    soc_name=$(cat "${SYSFS_SOCNAME_PATH}" 2>/dev/null | tr -d '[:space:]')
+  elif [ -f "${SYSFS_SOMNAME_PATH}" ]; then
+    soc_name=$(cat "${SYSFS_SOMNAME_PATH}" 2>/dev/null | tr -d '[:space:]')
+  fi
+  soc_name=${soc_name:-""}
+
+  if [ -f "${SYSFS_BOARDID_PATH}" ]; then
+    board_id=$(cat "${SYSFS_BOARDID_PATH}" 2>/dev/null | tr -d '[:space:]')
+  fi
+  board_id=${board_id:-""}
+
+  if echo "$soc_name" | grep -qi "x5"; then
+    local prefix=""
+    local version_num="0"
+    
+    if [[ "$board_id" == 30* ]]; then
+      prefix="x5_rdk"
+      version_num=$(echo "$board_id" | grep -o "30[0-9]" | grep -o "[0-9]$" || echo "0")
+    elif [[ "$board_id" == 50* ]]; then
+      prefix="x5_md"
+      version_num=$(echo "$board_id" | grep -o "50[0-9]" | grep -o "[0-9]$" || echo "0")
+    fi
+
+    if [ -n "$prefix" ]; then
+      rdk_type="${prefix}_v${version_num}"
+    else
+      rdk_type="x5_unknown"
+    fi
+
+  elif [[ "$soc_name" =~ ^[568b]$ ]]; then
+    case "$soc_name" in
+      "5") rdk_type="x3_rdk_v1"   ;; 
+      "6") rdk_type="x3_rdk_v1_2" ;;  
+      "8") rdk_type="x3_rdk_v2"   ;;
+      "b") rdk_type="x3_md_v1"    ;;
+    esac
+  fi
+
+  echo "$rdk_type"
+}
+
+board_type_string=$(get_rdk_type_string)
+
+if [[ "$board_type_string" == *x5* ]]; then	
+  ANT_CTRL1="428"
+  ANT_CTRL2="429"
+elif [[ "$board_type_string" == *x3* ]]; then
+  ANT_CTRL1="100"
+  ANT_CTRL2="99"
+else
+  exit
 fi
-if [ ! -d "/sys/class/gpio/gpio429/" ]; then
-    echo 429 > /sys/class/gpio/export
-    echo out > /sys/class/gpio/gpio429/direction
+
+if [ ! -d "/sys/class/gpio/gpio"${ANT_CTRL1}"/" ]; then
+    echo "${ANT_CTRL1}" > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio"${ANT_CTRL1}"/direction
+fi
+if [ ! -d "/sys/class/gpio/gpio"${ANT_CTRL2}"/" ]; then
+    echo "${ANT_CTRL2}" > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio"${ANT_CTRL2}"/direction
 fi
 if [ $# -ne 1  ];
 then
@@ -19,13 +82,13 @@ then
 fi
 if [ $1 = 'trace' ]
 then
-    echo 1 > /sys/class/gpio/gpio428/value
-    echo 0 > /sys/class/gpio/gpio429/value
+    echo 1 > /sys/class/gpio/gpio"${ANT_CTRL1}"/value
+    echo 0 > /sys/class/gpio/gpio"${ANT_CTRL2}"/value
     echo "Setting antenna to trace mode"
 elif [ $1 = 'cable' ]
 then
-    echo 0 > /sys/class/gpio/gpio428/value
-    echo 1 > /sys/class/gpio/gpio429/value
+    echo 0 > /sys/class/gpio/gpio"${ANT_CTRL1}"/value
+    echo 1 > /sys/class/gpio/gpio"${ANT_CTRL2}"/value
     echo "Setting antenna to cable mode"
 else 
     usage
